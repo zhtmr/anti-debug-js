@@ -1,0 +1,28 @@
+name: Auto Build
+
+on:
+  push:
+    paths: ['anti-debug.js']
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install terser
+        run: npm install -g terser
+
+      - name: Build minified file
+        run: terser anti-debug.js -o anti-debug.min.js -c -m
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add anti-debug.min.js
+          git commit -m "Auto-build minified file" || exit 0
+          git push
