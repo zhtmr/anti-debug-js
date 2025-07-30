@@ -19,9 +19,3 @@
     console.log('AntiDebug 활성화 완료!');
 </script>
 ````
-
-- preventSourceView: Ctrl+U / F12 / 우클릭 메뉴 방지
-- logWarningInConsole: 콘솔 경고 메시지 출력
-- enableSizeCheck: 창 크기 변화 기반 DevTools 감지
-- onDevtoolsDetected, onBotDetected: 사용자 정의 콜백
-- intervalMs: 체크 주기 (기본 1000ms)
