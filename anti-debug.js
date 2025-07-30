@@ -3,8 +3,8 @@ const AntiDebug = (() => {
     let intervalId = null;
 
     const defaultOptions = {
-        onDevtoolsDetected: () => { alert('DevTools 탐지됨!'); window.location.reload(); },
-        onBotDetected: () => { alert('자동화 접근 감지됨'); window.location.href = '/block'; },
+        // onDevtoolsDetected: () => { alert('DevTools 탐지됨!'); window.location.reload(); },
+        // onBotDetected: () => { alert('자동화 접근 감지됨'); window.location.href = '/block'; },
         preventSourceView: false,
         logWarningInConsole: false,
         enableSizeCheck: false,
