@@ -52,7 +52,7 @@ const AntiDebug = (() => {
 
         if (cfg.preventSourceView) blockSourceView();
         if (cfg.logWarningInConsole) {
-            console.warn('⚠️ AntiDebug 활성화됨 - 콘솔 접근 금지');
+            console.warn('⚠️ AntiDebug 활성화됨 - 콘솔 접근 금지!');
         }
 
         checkBot(() => { cfg.onBotDetected(); });
