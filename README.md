@@ -1,4 +1,4 @@
-# AntiDebug JS (by zhtmr)
+# AntiDebug JS (by zhtmr) [![Auto Build](https://github.com/zhtmr/anti-debug-js/actions/workflows/build.yml/badge.svg)](https://github.com/zhtmr/anti-debug-js/actions/workflows/build.yml)
 
 ## 사용법
 
