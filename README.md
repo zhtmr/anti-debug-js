@@ -6,14 +6,23 @@
 <script src="https://cdn.jsdelivr.net/gh/zhtmr/anti-debug-js/anti-debug.min.js"></script>
 
 <script>
-AntiDebug.start({
-    preventSourceView: true,      // 우클릭/키보드 차단
-    logWarningInConsole: true,    // 콘솔에 경고 출력
-    enableSizeCheck: true,        // 창 크기 체크
-    devtoolsCheck: true,          // DevTools 감지 (기본값)
-    consoleCheck: true,           // 콘솔 감지 (기본값)
-    onDevtoolsDetected: () => alert('보안 경고: DevTools 열림!')
-});
+    AntiDebug.start({
+        preventSourceView: true,        // 소스보기 차단
+        logWarningInConsole: true,      // 콘솔 경고
+        enableSizeCheck: true,          // 창 크기 감지 (가장 효과적)
+        enableDevtoolsCheck: true,      // 다중 감지 방법
+        intervalMs: 500,                // 0.5초마다 체크 (더 민감하게)
+        onDevtoolsDetected: () => {
+            alert('🚨 개발자 도구가 감지되었습니다!');
+            window.location.reload();     // 페이지 새로고침
+        },
+        onBotDetected: () => {
+            alert('🤖 자동화 도구가 감지되었습니다!');
+            window.location.href = 'about:blank';
+        }
+    });
+
+    console.log('AntiDebug 활성화 완료!');
 </script>
 ````
 
