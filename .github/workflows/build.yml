@@ -8,8 +8,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
         with:
           node-version: '18'
 
@@ -19,10 +22,18 @@ jobs:
       - name: Build minified file
         run: terser anti-debug.js -o anti-debug.min.js -c -m
 
-      - name: Commit changes
+      - name: Commit and push if changed
         run: |
-          git config --local user.email "zhtmr@github.com"
-          git config --local user.name "zhtmr"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
           git add anti-debug.min.js
-          git commit -m "Auto-build minified file" || exit 0
-          git push
+          
+          # 변경사항이 있을 때만 커밋
+          if ! git diff --staged --quiet; then
+            git commit -m "🤖 Auto-build minified file"
+            git push
+            echo "✅ Changes committed and pushed"
+          else
+            echo "ℹ️ No changes to commit"
+          fi
