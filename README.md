@@ -3,7 +3,7 @@
 ## 사용법
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/zhtmr/anti-debug-js@main/anti-debug.min.js" async crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/gh/zhtmr/anti-debug-js/anti-debug.min.js" async crossorigin="anonymous"></script>
 <script>
   AntiDebug.start({
     preventSourceView: true,
