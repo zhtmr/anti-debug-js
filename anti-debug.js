@@ -1,11 +1,15 @@
 const AntiDebug = (() => {
     let isDevtoolsOpen = false;
+    let intervalId = null;
+
     const defaultOptions = {
         onDevtoolsDetected: () => { alert('DevTools 탐지됨!'); window.location.reload(); },
         onBotDetected: () => { alert('자동화 접근 감지됨'); window.location.href = '/block'; },
         preventSourceView: false,
         logWarningInConsole: false,
         enableSizeCheck: false,
+        devtoolsCheck: true,
+        consoleCheck: true,
         intervalMs: 1000
     };
 
@@ -47,27 +51,46 @@ const AntiDebug = (() => {
         const cfg = { ...defaultOptions, ...options };
 
         if (cfg.preventSourceView) blockSourceView();
-        if (cfg.logWarningInConsole && cfg.consoleCheck) {
+        if (cfg.logWarningInConsole) {
             console.warn('⚠️ AntiDebug 활성화됨 - 콘솔 접근 금지');
         }
 
         checkBot(() => { cfg.onBotDetected(); });
 
-        setInterval(() => {
-            if (cfg.devtoolsCheck) checkDevtools(() => {
-                if (!isDevtoolsOpen) { isDevtoolsOpen = true; cfg.onDevtoolsDetected(); }
-            });
-            if (cfg.consoleCheck) checkConsole(() => {
-                if (!isDevtoolsOpen) { isDevtoolsOpen = true; cfg.onDevtoolsDetected(); }
-            });
-            if (cfg.enableSizeCheck) checkResize(() => {
-                if (!isDevtoolsOpen) { isDevtoolsOpen = true; cfg.onDevtoolsDetected(); }
-            });
+        intervalId = setInterval(() => {
+            if (cfg.devtoolsCheck) {
+                checkDevtools(() => {
+                    if (!isDevtoolsOpen) {
+                        isDevtoolsOpen = true;
+                        cfg.onDevtoolsDetected();
+                    }
+                });
+            }
+            if (cfg.consoleCheck) {
+                checkConsole(() => {
+                    if (!isDevtoolsOpen) {
+                        isDevtoolsOpen = true;
+                        cfg.onDevtoolsDetected();
+                    }
+                });
+            }
+            if (cfg.enableSizeCheck) {
+                checkResize(() => {
+                    if (!isDevtoolsOpen) {
+                        isDevtoolsOpen = true;
+                        cfg.onDevtoolsDetected();
+                    }
+                });
+            }
         }, cfg.intervalMs);
     }
 
     function stop() {
-        clearInterval();
+        if (intervalId) {
+            clearInterval(intervalId);
+            intervalId = null;
+        }
+        isDevtoolsOpen = false;
     }
 
     return { start, stop };
