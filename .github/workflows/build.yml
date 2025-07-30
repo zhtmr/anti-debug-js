@@ -21,8 +21,8 @@ jobs:
 
       - name: Commit changes
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config --local user.email "zhtmr@github.com"
+          git config --local user.name "zhtmr"
           git add anti-debug.min.js
           git commit -m "Auto-build minified file" || exit 0
           git push
