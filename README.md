@@ -3,14 +3,24 @@
 ## 사용법
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/zhtmr/anti-debug-js/anti-debug.min.js" async crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/gh/zhtmr/anti-debug-js/anti-debug.min.js"
+        onload="initAntiDebug()"
+        onerror="console.log('AntiDebug 로드 실패')"></script>
+
 <script>
-  AntiDebug.start({
-    preventSourceView: true,
-    logWarningInConsole: true,
-    enableSizeCheck: true,
-    onDevtoolsDetected: () => alert('보안 경고: DevTools 열림!')
-  });
+  function initAntiDebug() {
+    console.log('AntiDebug 로드 성공');
+    if (typeof AntiDebug !== 'undefined') {
+      AntiDebug.start({
+        preventSourceView: true,
+        logWarningInConsole: true,
+        enableSizeCheck: true,
+        onDevtoolsDetected: () => alert('보안 경고: DevTools 열림!')
+      });
+    } else {
+      console.error('AntiDebug 객체를 찾을 수 없습니다.');
+    }
+  }
 </script>
 ````
 
