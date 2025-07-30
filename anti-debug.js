@@ -1,5 +1,3 @@
-// antiDebug.js
-
 const AntiDebug = (() => {
     let isDevtoolsOpen = false;
     const defaultOptions = {
