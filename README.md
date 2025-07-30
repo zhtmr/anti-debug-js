@@ -3,23 +3,20 @@
 ## 사용법
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/zhtmr/anti-debug-js/anti-debug.min.js"
-        onload="initAntiDebug()"
-        onerror="console.log('AntiDebug 로드 실패')"></script>
+<script src="https://cdn.jsdelivr.net/gh/zhtmr/anti-debug-js/anti-debug.min.js"></script>
 
 <script>
-  function initAntiDebug() {
+  // 스크립트 로드 확인 후 실행
+  if (typeof AntiDebug !== 'undefined') {
     console.log('AntiDebug 로드 성공');
-    if (typeof AntiDebug !== 'undefined') {
-      AntiDebug.start({
-        preventSourceView: true,
-        logWarningInConsole: true,
-        enableSizeCheck: true,
-        onDevtoolsDetected: () => alert('보안 경고: DevTools 열림!')
-      });
-    } else {
-      console.error('AntiDebug 객체를 찾을 수 없습니다.');
-    }
+    AntiDebug.start({
+      preventSourceView: true,
+      logWarningInConsole: true,
+      enableSizeCheck: true,
+      onDevtoolsDetected: () => alert('보안 경고: DevTools 열림!')
+    });
+  } else {
+    console.log('AntiDebug 로드 실패');
   }
 </script>
 ````
