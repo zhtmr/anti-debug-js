@@ -3,7 +3,7 @@
 ## 사용법
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/zhtmr/anti-debug-js/anti-debug.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/zhtmr/anti-debug-js@latest/anti-debug.min.js"></script>
 
 <script>
     AntiDebug.start({
