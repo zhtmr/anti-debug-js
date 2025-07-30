@@ -6,18 +6,14 @@
 <script src="https://cdn.jsdelivr.net/gh/zhtmr/anti-debug-js/anti-debug.min.js"></script>
 
 <script>
-  // 스크립트 로드 확인 후 실행
-  if (typeof AntiDebug !== 'undefined') {
-    console.log('AntiDebug 로드 성공');
-    AntiDebug.start({
-      preventSourceView: true,
-      logWarningInConsole: true,
-      enableSizeCheck: true,
-      onDevtoolsDetected: () => alert('보안 경고: DevTools 열림!')
-    });
-  } else {
-    console.log('AntiDebug 로드 실패');
-  }
+AntiDebug.start({
+    preventSourceView: true,      // 우클릭/키보드 차단
+    logWarningInConsole: true,    // 콘솔에 경고 출력
+    enableSizeCheck: true,        // 창 크기 체크
+    devtoolsCheck: true,          // DevTools 감지 (기본값)
+    consoleCheck: true,           // 콘솔 감지 (기본값)
+    onDevtoolsDetected: () => alert('보안 경고: DevTools 열림!')
+});
 </script>
 ````
 
