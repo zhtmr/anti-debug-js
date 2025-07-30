@@ -1,242 +1,232 @@
 const AntiDebug = (() => {
-    let isDevtoolsOpen = false;
-    let intervalId = null;
-    let detectionCount = 0; // 감지 횟수 카운터
+    let isActive = false;
+    let manualDetectionMode = false;
 
     const defaultOptions = {
-        onDevtoolsDetected: () => { alert('DevTools 감지됨!'); window.location.reload(); },
-        onBotDetected: () => { alert('자동화 접근 감지됨'); window.location.href = '/block'; },
-        preventSourceView: false,
-        logWarningInConsole: false,
-        enableSizeCheck: true,
-        enableDebuggerCheck: false,
-        enableConsoleCheck: false,
-        intervalMs: 1000,
-        sizeThreshold: 250,
-        debuggerThreshold: 100,
-        requiredDetections: 3          // 3번 연속 감지시에만 경고
+        preventSourceView: true,        // 키보드/마우스 차단
+        preventConsoleAccess: false,    // console.log 차단 (선택적)
+        showWarningMessage: true,       // 차단시 경고 메시지
+        enableManualDetection: false,   // 수동 감지 모드 (사용자가 직접 신고)
+        strictMode: false,              // 엄격 모드 (모든 상호작용 차단)
+
+        // 자동 감지 관련 (모두 기본 비활성화)
+        enableSizeCheck: false,         // ❌ 창 크기 자동 감지 비활성화
+        enableDebuggerCheck: false,     // ❌ debugger 자동 감지 비활성화
+        enableConsoleCheck: false,      // ❌ console 자동 감지 비활성화
+
+        onBlocked: () => {
+            console.log('🚫 개발자 도구 접근이 차단되었습니다.');
+        }
     };
 
-    // 창 크기 감지
-    function checkWindowSize(callback, threshold) {
-        try {
-            // undefined 체크 추가
-            if (!window.outerWidth || !window.outerHeight ||
-                !window.innerWidth || !window.innerHeight) {
+    // 키보드 차단 (가장 효과적이고 안전함)
+    function setupKeyboardBlocking(showWarning) {
+        document.addEventListener('keydown', function(e) {
+            let blocked = false;
+            let action = '';
+
+            // F12 (개발자 도구)
+            if (e.key === 'F12') {
+                blocked = true;
+                action = '개발자 도구 (F12)';
+            }
+
+            // Ctrl+Shift+I (개발자 도구)
+            else if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                blocked = true;
+                action = '개발자 도구 (Ctrl+Shift+I)';
+            }
+
+            // Ctrl+Shift+J (콘솔)
+            else if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+                blocked = true;
+                action = '콘솔 (Ctrl+Shift+J)';
+            }
+
+            // Ctrl+U (소스 보기)
+            else if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) {
+                blocked = true;
+                action = '소스 보기 (Ctrl+U)';
+            }
+
+            // Ctrl+Shift+C (요소 검사)
+            else if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+                blocked = true;
+                action = '요소 검사 (Ctrl+Shift+C)';
+            }
+
+            // Ctrl+Shift+K (Firefox 콘솔)
+            else if (e.ctrlKey && e.shiftKey && e.key === 'K') {
+                blocked = true;
+                action = '콘솔 (Ctrl+Shift+K)';
+            }
+
+            if (blocked) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (showWarning) {
+                    console.warn(`🚫 ${action} 접근이 차단되었습니다.`);
+                }
+
                 return false;
             }
+        });
+    }
 
-            const widthDiff = window.outerWidth - window.innerWidth;
-            const heightDiff = window.outerHeight - window.innerHeight;
+    // 마우스 우클릭 차단
+    function setupMouseBlocking(showWarning) {
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
 
-            // 디버깅 로그 (개발시에만 사용)
-            // console.log(`Size check: W:${widthDiff}, H:${heightDiff}, Threshold:${threshold}`);
-
-            // 두 조건 모두 만족해야 감지
-            if (widthDiff > threshold && heightDiff > threshold) {
-                return true;
-            }
-
-            // 또는 한쪽이 매우 큰 경우만 감지
-            if (widthDiff > threshold * 2 || heightDiff > threshold * 2) {
-                return true;
+            if (showWarning) {
+                console.warn('🚫 우클릭 메뉴가 차단되었습니다.');
             }
 
             return false;
-
-        } catch (e) {
-            return false;
-        }
+        });
     }
 
-    // debugger 감지 (선택적)
-    function checkDebugger(callback, threshold) {
-        try {
-            const start = performance.now();
-            (() => { debugger; })();
-            const end = performance.now();
-
-            const diff = end - start;
-            // console.log(`Debugger check: ${diff}ms, Threshold: ${threshold}ms`);
-
-            if (diff > threshold) {
-                return true;
-            }
-            return false;
-        } catch (e) {
-            return false;
-        }
-    }
-
-    // console 접근 감지 (선택적)
-    function checkConsoleAccess(callback) {
-        try {
-            let detected = false;
-            const element = new Image();
-
-            Object.defineProperty(element, 'id', {
-                get: function() {
-                    detected = true;
-                    return 'detected';
-                }
-            });
-
-            // 짧은 시간 동안만 체크
-            console.dir(element);
-
-            setTimeout(() => {
-                try { delete element.id; } catch (e) {}
-            }, 50);
-
-            return detected;
-        } catch (e) {
-            return false;
-        }
-    }
-
-    function checkBot(callback) {
-        const botPatterns = [
-            /bot/i, /spider/i, /crawl/i, /headless/i,
-            /phantom/i, /selenium/i, /puppeteer/i, /playwright/i
-        ];
-
-        const userAgent = navigator.userAgent;
-        const isBot = botPatterns.some(pattern => pattern.test(userAgent)) ||
-            navigator.webdriver ||
-            window.chrome?.webdriver ||
-            window.callPhantom ||
-            window._phantom ||
-            window.__nightmare;
-
-        if (isBot) {
-            callback();
-        }
-    }
-
-    function blockSourceView() {
-        // 우클릭 차단
-        document.addEventListener('contextmenu', e => {
+    // 텍스트 선택 차단 (선택적)
+    function setupSelectionBlocking() {
+        document.addEventListener('selectstart', e => {
             e.preventDefault();
             return false;
         });
 
-        // 키보드 단축키 차단
-        document.addEventListener('keydown', function(e) {
-            // F12
-            if (e.key === 'F12') {
-                e.preventDefault();
-                return false;
-            }
-
-            // Ctrl+Shift+I (개발자도구)
-            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-                e.preventDefault();
-                return false;
-            }
-
-            // Ctrl+Shift+J (콘솔)
-            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
-                e.preventDefault();
-                return false;
-            }
-
-            // Ctrl+U (소스보기)
-            if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) {
-                e.preventDefault();
-                return false;
-            }
-
-            // Ctrl+Shift+C (요소검사)
-            if (e.ctrlKey && e.shiftKey && e.key === 'C') {
-                e.preventDefault();
-                return false;
-            }
+        document.addEventListener('dragstart', e => {
+            e.preventDefault();
+            return false;
         });
+
+        // CSS로도 선택 차단
+        const style = document.createElement('style');
+        style.textContent = `
+            * {
+                -webkit-user-select: none !important;
+                -moz-user-select: none !important;
+                -ms-user-select: none !important;
+                user-select: none !important;
+            }
+            input, textarea {
+                -webkit-user-select: text !important;
+                -moz-user-select: text !important;
+                -ms-user-select: text !important;
+                user-select: text !important;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // Console 접근 차단 (선택적, 주의해서 사용)
+    function setupConsoleBlocking() {
+        // console 메서드들을 무력화
+        const consoleMethods = ['log', 'warn', 'error', 'info', 'debug', 'trace', 'dir', 'group', 'groupCollapsed', 'groupEnd', 'clear'];
+
+        consoleMethods.forEach(method => {
+            const original = console[method];
+            console[method] = function() {
+                // 무시하거나 경고 표시
+                if (method === 'warn' || method === 'error') {
+                    original.apply(console, ['🚫 Console 접근이 제한되었습니다.']);
+                }
+            };
+        });
+    }
+
+    // 수동 감지 모드 (사용자가 의심스러운 활동 신고)
+    function setupManualDetection() {
+        // 페이지에 신고 버튼 추가
+        const reportButton = document.createElement('button');
+        reportButton.innerHTML = '🚨 의심스러운 활동 신고';
+        reportButton.style.cssText = `
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 9999;
+            padding: 10px;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        `;
+
+        reportButton.onclick = () => {
+            const reason = prompt('의심스러운 활동을 발견하셨나요?\n신고 사유를 입력해주세요:');
+            if (reason) {
+                alert(`신고가 접수되었습니다: ${reason}`);
+                console.log(`🚨 사용자 신고: ${reason}`);
+                // 여기서 서버로 신고 내용 전송 가능
+            }
+        };
+
+        document.body.appendChild(reportButton);
     }
 
     return {
         start: function(options = {}) {
             const config = { ...defaultOptions, ...options };
 
+            if (isActive) {
+                console.warn('⚠️ AntiDebug가 이미 실행중입니다.');
+                return false;
+            }
+
+            isActive = true;
+
+            // 키보드 차단 설정
             if (config.preventSourceView) {
-                blockSourceView();
+                setupKeyboardBlocking(config.showWarningMessage);
+                setupMouseBlocking(config.showWarningMessage);
+                console.log('🛡️ 키보드/마우스 차단 활성화됨');
             }
 
-            if (config.logWarningInConsole) {
-                console.warn('⚠️ AntiDebug 활성화됨');
+            // 엄격 모드
+            if (config.strictMode) {
+                setupSelectionBlocking();
+                console.log('🔒 엄격 모드 활성화됨 (텍스트 선택 차단)');
             }
 
-            // 봇 감지 (즉시 실행)
-            checkBot(() => {
-                if (config.onBotDetected) config.onBotDetected();
-            });
+            // Console 차단 (주의해서 사용)
+            if (config.preventConsoleAccess) {
+                setupConsoleBlocking();
+                console.log('🚫 Console 접근 차단 활성화됨');
+            }
 
-            // 초기 기준값 설정 (첫 5초간은 감지 안함)
-            let initialDelay = 5000;
-            let startTime = Date.now();
+            // 수동 감지 모드
+            if (config.enableManualDetection) {
+                setupManualDetection();
+                console.log('📋 수동 신고 모드 활성화됨');
+            }
 
-            // 주기적 감지 시작
-            if (intervalId) clearInterval(intervalId);
+            // ✅ 자동 감지는 모두 비활성화됨 (false positive 방지)
+            if (config.enableSizeCheck || config.enableDebuggerCheck || config.enableConsoleCheck) {
+                console.warn('⚠️ 자동 감지 기능은 false positive 때문에 비활성화되었습니다.');
+                console.warn('⚠️ 키보드/마우스 차단만 사용하는 것을 권장합니다.');
+            }
 
-            intervalId = setInterval(() => {
-                // 초기 지연 시간 체크
-                if (Date.now() - startTime < initialDelay) {
-                    return;
-                }
+            console.log('✅ AntiDebug 활성화 완료 (False Positive 방지 모드)');
+            console.log('🛡️ 개발자 도구 키보드 단축키가 차단되었습니다.');
+            console.log('🛡️ 우클릭 메뉴가 차단되었습니다.');
 
-                let currentDetections = 0;
-
-                // 창 크기 감지 (가장 안정적)
-                if (config.enableSizeCheck) {
-                    if (checkWindowSize(null, config.sizeThreshold)) {
-                        currentDetections++;
-                    }
-                }
-
-                // debugger 감지 (선택적)
-                if (config.enableDebuggerCheck) {
-                    if (checkDebugger(null, config.debuggerThreshold)) {
-                        currentDetections++;
-                    }
-                }
-
-                // console 감지 (선택적)
-                if (config.enableConsoleCheck) {
-                    if (checkConsoleAccess()) {
-                        currentDetections++;
-                    }
-                }
-
-                // 연속 감지 카운터
-                if (currentDetections > 0) {
-                    detectionCount++;
-                    console.log(`🔍 감지 횟수: ${detectionCount}/${config.requiredDetections}`);
-                } else {
-                    detectionCount = 0; // 감지되지 않으면 카운터 리셋
-                }
-
-                // 필요한 횟수만큼 연속 감지시에만 경고
-                if (detectionCount >= config.requiredDetections && !isDevtoolsOpen) {
-                    isDevtoolsOpen = true;
-                    if (config.onDevtoolsDetected) {
-                        config.onDevtoolsDetected();
-                    }
-                }
-            }, config.intervalMs);
-
-            console.log('🛡️ 개선된 AntiDebug 시작됨');
-            console.log(`📊 설정: 크기임계값=${config.sizeThreshold}px, 필요감지횟수=${config.requiredDetections}회`);
             return true;
         },
 
         stop: function() {
-            if (intervalId) {
-                clearInterval(intervalId);
-                intervalId = null;
-            }
-            isDevtoolsOpen = false;
-            detectionCount = 0;
+            isActive = false;
             console.log('🛡️ AntiDebug 중지됨');
+
+            // 페이지 새로고침으로 모든 이벤트 리스너 제거
+            if (confirm('AntiDebug를 완전히 중지하려면 페이지를 새로고침해야 합니다. 새로고침하시겠습니까?')) {
+                window.location.reload();
+            }
+        },
+
+        // 상태 확인
+        isActive: function() {
+            return isActive;
         }
     };
 })();
