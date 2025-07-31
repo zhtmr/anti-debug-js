@@ -23,15 +23,15 @@
                 // 커스텀 동작을 여기에 추가할 수 있습니다
             }
         });
-    </script>
+</script>
 
-    <!-- 모듈을 지원하지 않는 브라우저용 대체 -->
-    <script nomodule>
+<!-- 모듈을 지원하지 않는 브라우저용 대체 -->
+<script nomodule>
         // anti-devtools.js를 직접 로드한 경우
         const antiDevTools = new AntiDevTools({
             blockKeyboard: true,
             detectConsole: true,
             customContextMenu: true
         });
-    </script>
+</script>
 ````
