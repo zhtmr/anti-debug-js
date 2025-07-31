@@ -8,17 +8,30 @@
 ```html
 <script src="https://cdn.jsdelivr.net/gh/zhtmr/anti-debug-js@latest/anti-debug.min.js"></script>
 
-<script>
-    AntiDebug.start({
-        preventSourceView: true,
-        enableSizeCheck: true,
-        intervalMs: 2000,
-        onDevtoolsDetected: () => {
-            alert('🚨 개발자 도구가 감지되었습니다!');
-            window.location.reload();
-        }
-    });
+<script type="module">
+        import AntiDevTools from './anti-devtools.js';
+        
+        // 기본 설정으로 초기화
+        const antiDevTools = new AntiDevTools({
+            blockKeyboard: true,
+            detectConsole: true,
+            customContextMenu: true,
+            warningMessage: '개발자 도구가 감지되었습니다!',
+            detectionInterval: 500,
+            onDetect: (method) => {
+                console.log('개발자 도구 접근 시도:', method);
+                // 커스텀 동작을 여기에 추가할 수 있습니다
+            }
+        });
+    </script>
 
-    console.log('AntiDebug 활성화 완료!');
-</script>
+    <!-- 모듈을 지원하지 않는 브라우저용 대체 -->
+    <script nomodule>
+        // anti-devtools.js를 직접 로드한 경우
+        const antiDevTools = new AntiDevTools({
+            blockKeyboard: true,
+            detectConsole: true,
+            customContextMenu: true
+        });
+    </script>
 ````
