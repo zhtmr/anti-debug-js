@@ -1,4 +1,7 @@
-# AntiDebug JS (by zhtmr) [![Auto Build](https://github.com/zhtmr/anti-debug-js/actions/workflows/build.yml/badge.svg)](https://github.com/zhtmr/anti-debug-js/actions/workflows/build.yml)
+[![](https://data.jsdelivr.com/v1/package/gh/zhtmr/anti-debug-js/badge)](https://www.jsdelivr.com/package/gh/zhtmr/anti-debug-js)
+[![Auto Build](https://github.com/zhtmr/anti-debug-js/actions/workflows/build.yml/badge.svg)](https://github.com/zhtmr/anti-debug-js/actions/workflows/build.yml)
+
+# AntiDebug JS (by zhtmr) 
 
 ## 사용법
 
