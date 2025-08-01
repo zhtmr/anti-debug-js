@@ -14,7 +14,7 @@
         // 기본 설정으로 초기화
         const antiDevTools = new AntiDevTools({
             blockKeyboard: true,
-            detectConsole: true,   // consol.* 사용 시 false 로 수정
+            detectConsole: true,   // console.* 사용 시 false 로 수정
             customContextMenu: true,
             warningMessage: '개발자 도구가 감지되었습니다!',
             detectionInterval: 500,
